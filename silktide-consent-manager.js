@@ -97,8 +97,14 @@ class SilktideCookieBanner {
   }
 
   hideBackdrop() {
-    if (this.backdrop) {
+    if (this.backdrop) {                      /* lokální backdrop */
       this.backdrop.style.display = 'none';
+      this.backdrop.style.pointerEvents = 'none';
+    }
+    const global = document.getElementById('silktide-backdrop-global'); /* případný globální */
+    if (global) {
+      global.style.display = 'none';
+      global.style.pointerEvents = 'none';
     }
 
     // Trigger optional onBackdropClose callback
@@ -206,6 +212,17 @@ class SilktideCookieBanner {
       if (typeof this.config.onRejectAll === 'function') { this.config.onRejectAll(); }
     }
 
+    +
+    /* -------- agregovaná událost + Consent Mode -------- */
+    dataLayer.push({ event: accepted ? 'consent_accept_all' : 'consent_reject_all' });
+    gtag('consent', 'update', {
+      ad_storage:            accepted ? 'granted' : 'denied',
+      ad_user_data:          accepted ? 'granted' : 'denied',
+      ad_personalization:    accepted ? 'granted' : 'denied',
+      analytics_storage:     accepted ? 'granted' : 'denied',
+      functionality_storage: accepted ? 'granted' : 'denied',
+    });
+
     // finally update the checkboxes in the modal with the values from localStorage
     this.updateCheckboxState();
   }
@@ -266,6 +283,32 @@ class SilktideCookieBanner {
       }
     });
   }
+
+   /**
+   * Uloží aktuální volby, pošle dataLayer i Consent Mode a zavře modal.
+   */
+  saveAndClosePreferences() {
+    /* 1) Označit, že uživatel provedl volbu a uložit stav přepínačů */
+    this.setInitialCookieChoiceMade();
+    this.updateCheckboxState(true);      // ukládá + spouští onAccept/onReject
+
+    /* 2) Zpráva do dataLayeru včetně granularit stavů */
+    const states = this.getAcceptedCookies();         // {nezbytn:true, funk_n:false…}
+    dataLayer.push({ event: 'consent_saved_preferences', ...states });
+
+    /* 3) Google Consent Mode v2 – mapování na jednotlivé signály */
+    gtag('consent', 'update', {
+      ad_storage:            states.marketingov ? 'granted' : 'denied',
+      ad_user_data:          states.marketingov ? 'granted' : 'denied',
+      ad_personalization:    states.marketingov ? 'granted' : 'denied',
+      analytics_storage:     states.analytick   ? 'granted' : 'denied',
+      functionality_storage: states.funk_n      ? 'granted' : 'denied',
+    });
+
+    /* 4) Zavření modalu + návrat stránky do normálu */
+    this.toggleModal(false);
+  }
+
 
   // ----------------------------------------------------------------
   // Banner
@@ -408,6 +451,13 @@ class SilktideCookieBanner {
         ? ` aria-label="${rejectNonEssentialButtonLabel}"` 
         : ''
     }>${rejectNonEssentialButtonText}</button>`;
+
+    /* nové tlačítko – text lze přepsat v configu text.preferences.savePreferencesButtonText */
+    const savePreferencesButtonText =
+      this.config.text?.preferences?.savePreferencesButtonText || 'Uložit moje předvolby';
+    const savePreferencesButton =
+      `<button class="preferences-save st-button st-button--secondary">${savePreferencesButtonText}</button>`;
+
     
     // Credit link
     const creditLinkText = this.config.text?.preferences?.creditLinkText || 'Get this banner for free';
@@ -465,7 +515,7 @@ class SilktideCookieBanner {
       <footer>
         ${acceptAllButton}
         ${rejectNonEssentialButton}
-        ${creditLink}
+        ${savePreferencesButton}
       </footer>
     `;
 
@@ -666,19 +716,12 @@ class SilktideCookieBanner {
       const acceptAllButton = this.modal.querySelector('.preferences-accept-all');
       const rejectAllButton = this.modal.querySelector('.preferences-reject-all');
 
-      closeButton?.addEventListener('click', () => {
-        this.toggleModal(false);
+      /* křížek = stejné chování jako "Uložit moje předvolby" */
+      closeButton?.addEventListener('click', () => this.saveAndClosePreferences());
 
-        const hasMadeFirstChoice = this.hasSetInitialCookieChoices();
-
-        if (hasMadeFirstChoice) {
-          // run through the callbacks based on the current localStorage state
-          this.runStoredCookiePreferenceCallbacks();
-        } else {
-          // handle the case where the user closes without making a choice for the first time
-          this.handleClosedWithNoChoice();
-        }
-      });
+      /* listener pro nové tlačítko Uložit */
+      const saveButton = this.modal.querySelector('.preferences-save');
+      saveButton?.addEventListener('click', () => this.saveAndClosePreferences());
       acceptAllButton?.addEventListener('click', () => this.handleCookieChoice(true));
       rejectAllButton?.addEventListener('click', () => this.handleCookieChoice(false));
 
