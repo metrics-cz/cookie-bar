@@ -272,6 +272,7 @@
   align-items: center;
   margin-bottom: 20px;
   gap: 16px;
+  flex-wrap: nowrap;
 }
 
 #silktide-modal h1 {
@@ -290,6 +291,13 @@
   cursor: pointer;
   background: var(--backgroundColor);
   color: var(--primaryColor);
+  order: -1;                  
+  margin-right: auto;         
+  flex-shrink: 0;
+}
+
+#silktide-modal header + p {
+  margin-top: 0;
 }
 
 #silktide-modal .modal-close svg {
@@ -405,7 +413,8 @@
   font-weight: 500;
   color: var(--backgroundColor);
   position: absolute;
-  top: 7px;
+  top: 50%;
+  transform: translateY(-50%);
   right: 8px;
   transition: right 150ms ease-out, opacity 150ms ease-out;
 }
@@ -451,6 +460,11 @@
   flex-direction: column;
   gap: 16px;
   margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+#silktide-backdrop {
+  pointer-events: auto;
 }
 
 @media (min-width: 600px) {
