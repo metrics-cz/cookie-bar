@@ -13,9 +13,11 @@
               --focus: 0 0 0 2px #ffffff, 0 0 0 4px #000000, 0 0 0 6px #ffffff;
               --boxShadow: -5px 5px 10px 0px #00000012, 0px 0px 50px 0px #0000001a;
               --fontFamily: Helvetica Neue, Segoe UI, Arial, sans-serif;
-              --primaryColor: #3B62E2;
-              --backgroundColor: #FFFFFF;
-              --textColor: #253B48;
+              --primaryColor: var(--cmp-primary , #3B62E2);
+              --backgroundColor: var(--cmp-bg     , #FFFFFF);
+              --textColor:      var(--cmp-text   , #253B48);
+              --buttonBorderColor: var(--cmp-border , var(--cmp-primary , #3B62E2));
+              --switchOnColor:    var(--cmp-switch , var(--cmp-primary , #3B62E2));
               --backdropBackgroundColor: #00000080;
               --backdropBackgroundBlur: 10px;
               --cookieIconColor: #3B62E2;
@@ -83,7 +85,7 @@
 #silktide-wrapper .st-button {
   color: var(--backgroundColor);
   background-color: var(--primaryColor);
-  border: 2px solid var(--primaryColor);
+  border: 2px solid var(--buttonBorderColor);
   padding: 10px 20px;
   text-decoration: none;
   text-align: center;
@@ -105,6 +107,7 @@
 #silktide-wrapper .st-button--secondary {
   background-color: var(--backgroundColor);
   color: var(--primaryColor);
+  border: 2px solid var(--buttonBorderColor);
 }
 
 #silktide-wrapper .st-button--secondary:hover {
@@ -268,9 +271,10 @@
 -------------------------------- */
 #silktide-modal header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
+  position: relative;
+  justify-content: flex-start;
+  align-items: flex-start;
+  margin-bottom: 32px;
   gap: 16px;
   flex-wrap: nowrap;
 }
@@ -280,20 +284,19 @@
   color: var(--textColor);
   font-size: 24px;
   font-weight: 500;
-  margin: 0px;
+  margin: 0;
+  padding-right: 56px;
 }
 
 #silktide-modal .modal-close {
-  display: inline-flex;
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: transparent;
   border: none;
-  padding: 10px;
-  border: 0px;
+  padding: 8px;
   cursor: pointer;
-  background: var(--backgroundColor);
   color: var(--primaryColor);
-  order: -1;                  
-  margin-right: auto;         
-  flex-shrink: 0;
 }
 
 #silktide-modal header + p {
@@ -429,7 +432,7 @@
 
 /* Checked Switch Styles */
 #silktide-modal .switch input:checked + .switch__pill {
-  background: var(--primaryColor);
+  background: var(--switchOnColor);
 }
 
 #silktide-modal .switch input:checked ~ .switch__dot {
@@ -457,21 +460,24 @@
 -------------------------------- */
 #silktide-modal footer {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-between;
   gap: 16px;
   margin-top: 24px;
-  flex-wrap: wrap;
 }
 
 #silktide-backdrop {
   pointer-events: auto;
 }
 
-@media (min-width: 600px) {
-  #silktide-modal footer {
-    flex-direction: row;
-    align-items: center;
-  }
+/* rozmístění tlačítek */
+#silktide-modal footer .st-button{
+  flex: 1 1 calc(33.333% - 16px);
+  min-width: 120px;
+}
+@media (max-width: 599px){
+  #silktide-modal footer .st-button{ flex: 1 1 100%; }
 }
 
 #silktide-modal footer a {
